@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <deque>
 
 using namespace std;
 
@@ -7,73 +8,67 @@ struct dominoT {
     int leftDots;
     int rightDots;
 };
-bool FormsDominoChain(vector<dominoT> & dominos){
+
+void order(vector<dominoT> &dominos, deque<dominoT> &answer) {
+    int i = 0;
+    while (i < dominos.size()) {
+        if (dominos[i].rightDots == answer[0].leftDots) {
+            answer.push_front(dominos[i]);
+            dominos.erase(dominos.begin() + i);
+            return order(dominos, answer);
+        } else if (dominos[i].leftDots == answer[answer.size() - 1].rightDots) {
+            answer.push_back(dominos[i]);
+            dominos.erase(dominos.begin() + i);
+            return order(dominos, answer);
+        }
+        i++;
+    }
+}
+
+bool FormsDominoChain(deque<dominoT> &answer) {
     bool Done = true;
-    int i,j;
-    for(int k = dominos.size()-1 ; k>=0 ; k--){
-        if( k!=0 && dominos[k].leftDots != dominos[k-1].rightDots){
-            i=k;
-            j=k-1;
+    for (int k = 0; k < answer.size() - 1; k++) {
+        if (answer[k].rightDots != answer[k + 1].leftDots) {
             Done = false;
             break;
-        }
-    }
-    if(!Done){
-        for(int k = j ; k>=0 ; k--){
-            if(dominos[k].rightDots == dominos[i].leftDots && dominos[k].rightDots == dominos[k].leftDots){
-                dominoT temp = dominos[j];
-                dominos[j] = dominos[k];
-                dominos[k] = temp;
-                return FormsDominoChain(dominos);
-            }
-            else if (dominos[k].rightDots == dominos[i].leftDots) {
-                dominoT temp = dominos[j];
-                dominos[j] = dominos[k];
-                dominos[k] = temp;
-                return FormsDominoChain(dominos);
-            }
-            else if(dominos[k].leftDots == dominos[dominos.size()-1].rightDots){
-                dominos.push_back(dominos[k]);
-                dominos.erase(dominos.begin()+k);
-                return FormsDominoChain(dominos);
-            }
-            else if(k!=dominos.size()-1 && dominos[k].leftDots == dominos[k].rightDots && dominos[k+1].leftDots != dominos[k].rightDots){
-                dominos.push_back(dominos[k]);
-                dominos.erase(dominos.begin()+k);
-                return FormsDominoChain(dominos);
-            }
         }
     }
     return Done;
 }
 
-int main()
-{
+int main() {
     int num, x, y;
     cout << "Enter number of dominos in the chain: \n";
     cin >> num;
     dominoT domin;
-    vector <dominoT> dominos;
+    vector<dominoT> dominos;
+    deque<dominoT> answer;
     cout << "Enter your dominos chain\n" << "please, seperate between right dots and left dots with a space\n";
-    for(int i = 0 ; i < num ; i++){
-        cout << "Dominos " << i+1 << ":";
+    int i = 0;
+    while (i < num) {
+        cout << "Dominos " << i + 1 << ":";
         cin >> x >> y;
-        domin.leftDots=x;
-        domin.rightDots=y;
-        dominos.push_back(domin);
+        domin.leftDots = x;
+        domin.rightDots = y;
+        if (x == y || i == 0) {
+            answer.push_back(domin);
+        } else {
+            dominos.push_back(domin);
+        }
+        i++;
     }
-    bool ans = FormsDominoChain(dominos);
-    if(ans){
-        for(int i = 0 ; i < num ; i++){
-            cout << dominos[i].leftDots << '|' << dominos[i].rightDots;
-            if(i!=num-1){
+    order(dominos, answer);
+    bool ans;
+    ans = FormsDominoChain(answer);
+    if (ans && answer.size() == num) {
+        for (int i = 0; i < num; i++) {
+            cout << answer[i].leftDots << '|' << answer[i].rightDots;
+            if (i != num - 1) {
                 cout << " - ";
             }
         }
-    }
-    else {
+    } else {
         cout << "Sorry, there is no way to form a domino chain";
     }
     return 0;
 }
-
